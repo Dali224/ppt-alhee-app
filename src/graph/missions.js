@@ -114,25 +114,34 @@ async function upsertIndexRow(siteId, listId, missionId, fields) {
 }
 
 /* ------------------------------ API publique ------------------------------ */
+// Liste les missions DIRECTEMENT depuis les dossiers PPT-Data/missions/ (source de vérité,
+// indépendant de la liste PPT-Index). Pour chaque dossier on lit mission.json (méta légères).
 export async function listMissions() {
-  const siteId = await getSiteId();
-  const listId = await getListId(config.sharepoint.indexList);
-  const r = await graphFetch(`/sites/${siteId}/lists/${listId}/items?$expand=fields&$top=500`);
-  return (r.value || [])
-    .map((it) => {
-      const f = it.fields || {};
-      return {
-        itemId: it.id,
-        missionId: f.MissionId || missionIdFromLien(f.LienDocument),
-        copro: f.Title || '(sans nom)',
-        syndic: f.Syndic || '',
-        statut: f.Statut || '',
-        auteur: f.Auteur || '',
-        modified: it.lastModifiedDateTime || '',
-      };
+  const driveId = await getDriveId(config.sharepoint.dataLibrary);
+  let folders = [];
+  try {
+    const r = await graphFetch(`/drives/${driveId}/root:/missions:/children?$top=500&$select=name,lastModifiedDateTime,folder`);
+    folders = (r.value || []).filter((c) => c.folder); // uniquement les dossiers de mission
+  } catch (_) {
+    return []; // dossier "missions" inexistant → aucune mission
+  }
+  const out = await Promise.all(
+    folders.map(async (c) => {
+      const missionId = c.name;
+      let copro = '(sans nom)', syndic = '', statut = '', auteur = '';
+      try {
+        const res = await graphFetch(`/drives/${driveId}/root:/missions/${encodeURI(missionId)}/mission.json:/content`);
+        const data = res instanceof Response ? JSON.parse(await res.text()) : res;
+        const m = data.meta || {};
+        copro = m.copro || '(sans nom)';
+        syndic = m.syndic || '';
+        statut = data.statut || '';
+        auteur = m.auditeur || '';
+      } catch (_) { /* mission.json illisible : on garde l'id */ }
+      return { itemId: null, missionId, copro, syndic, statut, auteur, modified: c.lastModifiedDateTime || '' };
     })
-    .filter((m) => m.missionId) // garde celles qu'on peut rouvrir (id présent ou déduit du chemin)
-    .sort((a, b) => (b.modified || '').localeCompare(a.modified || ''));
+  );
+  return out.sort((a, b) => (b.modified || '').localeCompare(a.modified || ''));
 }
 
 export async function loadMission(missionId) {
@@ -202,10 +211,22 @@ export async function saveMission(project, opts = {}) {
 
 export async function deleteMission(missionId, itemId) {
   const driveId = await getDriveId(config.sharepoint.dataLibrary);
-  const siteId = await getSiteId();
-  const listId = await getListId(config.sharepoint.indexList);
+  // 1) supprime le dossier de la mission (fichiers + photos)
   try { await graphFetch(`/drives/${driveId}/root:/${encodeURI('missions/' + missionId)}`, { method: 'DELETE' }); } catch (_) {}
-  if (itemId) {
-    try { await graphFetch(`/sites/${siteId}/lists/${listId}/items/${itemId}`, { method: 'DELETE' }); } catch (_) {}
-  }
+  // 2) supprime la ligne d'index correspondante (retrouvée par itemId, MissionId ou chemin)
+  try {
+    const siteId = await getSiteId();
+    const listId = await getListId(config.sharepoint.indexList);
+    let rowId = itemId;
+    if (!rowId) {
+      const path = `missions/${missionId}/mission.json`;
+      const r = await graphFetch(`/sites/${siteId}/lists/${listId}/items?$expand=fields&$top=500`);
+      const row = (r.value || []).find((it) => {
+        const f = it.fields || {};
+        return (f.MissionId && f.MissionId === missionId) || (f.LienDocument === path);
+      });
+      rowId = row && row.id;
+    }
+    if (rowId) await graphFetch(`/sites/${siteId}/lists/${listId}/items/${rowId}`, { method: 'DELETE' });
+  } catch (_) {}
 }

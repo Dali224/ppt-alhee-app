@@ -403,10 +403,23 @@ input[type=file]{display:none}
    Aucun changement de structure ni de parcours.
    ============================================================================ */
 @media(max-width:760px){
-  /* — Barre : compacte, action principale (Exporter PPT) pleine largeur — */
-  #bar{padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));gap:6px}
-  #bar .logo{font-size:18px}
-  #bar .go{flex:1 1 100%;order:9;min-height:46px;font-size:14px}
+  /* — Barre : une seule rangée compacte qui défile horizontalement (au lieu de s'empiler) — */
+  #bar{
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    gap:6px;
+    padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));
+    align-items:center;
+  }
+  #bar::-webkit-scrollbar{height:0}                  /* défilement discret */
+  #bar>*{flex:0 0 auto}                               /* taille naturelle, pas de retour à la ligne */
+  #bar .logo{position:sticky;left:0;background:var(--vf);padding-right:6px;z-index:1;font-size:17px}
+  #bar .sub{display:none}                             /* sous-titre + statuts masqués (gain de place) */
+  #bar #authWho{display:inline}                       /* …sauf le nom du compte connecté */
+  #bar .go{order:0;width:auto;flex:0 0 auto;font-size:13px}   /* annule le plein-largeur */
+  #bar button,#bar label.btn{padding:8px 11px;font-size:13px;min-height:42px;white-space:nowrap}
+  #bar select{min-height:42px}
 
   /* — Onglets : plus grands au doigt, défilement horizontal conservé — */
   #tabs{gap:4px;padding:6px 10px 0}
@@ -426,8 +439,8 @@ input[type=file]{display:none}
   }
   .field textarea,.ai-ta{min-height:120px}
 
-  /* — Boutons : cibles ≥ 46px — */
-  #bar button,#bar label.btn,.btn-doc,.ai-go,.vrs-save,.vrs-imp,.vrs-b,.addbtn{min-height:46px}
+  /* — Boutons de formulaire/modale : cibles ≥ 46px (la barre du haut reste à 42px, plus compacte) — */
+  .btn-doc,.ai-go,.vrs-save,.vrs-imp,.vrs-b,.addbtn{min-height:46px}
   .addbtn{padding:13px 12px}
 
   /* — Photo + état empilés ; photo large et facile à viser — */
@@ -453,8 +466,6 @@ input[type=file]{display:none}
 }
 
 @media(max-width:480px){
-  #bar{gap:5px}
-  #bar .logo{font-size:17px}
-  #bar #tplStatus{flex-basis:100%;margin-left:0}   /* statut modèle sur sa propre ligne */
+  #bar{gap:5px;padding-left:8px;padding-right:8px}
   .lot-h{font-size:19px}
 }

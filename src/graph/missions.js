@@ -90,9 +90,22 @@ async function hydratePhotos(driveId, base, data) {
 }
 
 /* ------------------------------ Index ------------------------------ */
+// Récupère le missionId depuis le chemin LienDocument (robuste si la colonne MissionId
+// n'a pas été remplie — ex. délai de provisionnement de la colonne au 1er enregistrement).
+function missionIdFromLien(lien) {
+  const m = /missions\/([^/]+)\/mission\.json/i.exec(lien || '');
+  return m ? m[1] : '';
+}
+
 async function upsertIndexRow(siteId, listId, missionId, fields) {
+  const path = fields.LienDocument;
   const r = await graphFetch(`/sites/${siteId}/lists/${listId}/items?$expand=fields&$top=500`);
-  const existing = (r.value || []).find((it) => it.fields && it.fields.MissionId === missionId);
+  // On retrouve la ligne existante par MissionId OU par chemin de fichier (évite les doublons
+  // même si MissionId était vide sur une ancienne ligne).
+  const existing = (r.value || []).find((it) => {
+    const f = it.fields || {};
+    return (f.MissionId && f.MissionId === missionId) || (path && f.LienDocument === path);
+  });
   if (existing) {
     await graphFetch(`/sites/${siteId}/lists/${listId}/items/${existing.id}/fields`, { method: 'PATCH', body: fields });
   } else {
@@ -106,16 +119,19 @@ export async function listMissions() {
   const listId = await getListId(config.sharepoint.indexList);
   const r = await graphFetch(`/sites/${siteId}/lists/${listId}/items?$expand=fields&$top=500`);
   return (r.value || [])
-    .filter((it) => it.fields && it.fields.MissionId)
-    .map((it) => ({
-      itemId: it.id,
-      missionId: it.fields.MissionId,
-      copro: it.fields.Title || '(sans nom)',
-      syndic: it.fields.Syndic || '',
-      statut: it.fields.Statut || '',
-      auteur: it.fields.Auteur || '',
-      modified: it.lastModifiedDateTime || '',
-    }))
+    .map((it) => {
+      const f = it.fields || {};
+      return {
+        itemId: it.id,
+        missionId: f.MissionId || missionIdFromLien(f.LienDocument),
+        copro: f.Title || '(sans nom)',
+        syndic: f.Syndic || '',
+        statut: f.Statut || '',
+        auteur: f.Auteur || '',
+        modified: it.lastModifiedDateTime || '',
+      };
+    })
+    .filter((m) => m.missionId) // garde celles qu'on peut rouvrir (id présent ou déduit du chemin)
     .sort((a, b) => (b.modified || '').localeCompare(a.modified || ''));
 }
 

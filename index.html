@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ALHEE — Saisie PPT (Plan Pluriannuel de Travaux)</title>
+<meta name="description" content="Saisie de Plans Pluriannuels de Travaux en copropriété — outil ALHEE.">
+<meta name="theme-color" content="#18483C">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="apple-touch-icon" href="/apple-touch-icon-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PPT ALHEE">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/src/styles.css">
+</head>
+<body>
+<div id="bar">
+  <span class="logo">Alhee</span>
+  <span class="sub">Saisie — Plan Pluriannuel de Travaux</span>
+  <button id="btnNew">➕ Nouveau</button><button id="btnVersions">🗂️ Sauvegarde de version</button>
+  <span id="saveStatus" class="sub" style="margin-left:4px;opacity:.85"></span><button class="btn" id="btnBackup">⤓ Exporter</button>
+  <label class="btn">📎 Modèle (option)<input type="file" id="fileTpl" accept=".pptx"></label>
+  <span class="sub" style="opacity:.85;margin-left:6px">Zone prix</span><select id="zoneSel" style="margin-left:4px;padding:6px 8px;border-radius:8px;border:1px solid #2c5247;background:#15392f;color:#eaf0ea;font-size:13px"><option value="paris">Paris / IDF</option><option value="prov">Province</option></select><span id="tplStatus" class="sub" style="opacity:.8;margin-left:8px">Aucun modèle chargé</span>
+  <button class="go" id="btnExport" title="Générer le PowerPoint">⤓ Exporter PPT</button>
+</div>
+<div id="tabs"></div>
+<div id="main"></div>
+<div id="verModal">
+  <div class="vrs-card">
+    <div class="vrs-head">
+      <span class="vrs-title">🗂️ Versions enregistrées</span>
+      <button id="verClose" class="vrs-x" title="Fermer">✕</button>
+    </div>
+    <div class="vrs-bar">
+      <input id="verName" type="text" placeholder="Nom de la version">
+      <button id="verSaveBtn" class="vrs-save">➕ Enregistrer la version actuelle</button>
+      <label class="vrs-imp">⬆︎ Importer un .json<input type="file" id="verImport" accept=".json"></label>
+    </div>
+    <div class="vrs-hint">Chaque version est une sauvegarde indépendante stockée dans ce navigateur — gardez-en autant que vous voulez et rechargez celle de votre choix. La sauvegarde rapide « 💾 Sauvegarder » reste l'état restauré automatiquement au prochain lancement.</div>
+    <div id="verList" class="vrs-list"></div>
+  </div>
+</div>
+<!-- JSZip + moteur PPTX : IIFE qui posent window.JSZip et window.GEN. Gelés, ne pas modifier. -->
+<script src="/vendor/jszip.min.js"></script>
+<script src="/vendor/pptx-engine.js"></script>
+<!-- Couche applicative : module ES, importe catalog.js -->
+<script type="module" src="/src/app.js"></script>
+<!-- PWA : enregistrement du service worker (production uniquement) -->
+<script type="module" src="/src/pwa.js"></script>
+<!-- Cloud (Phase 4) : auth Entra ID + SharePoint, activé seulement si .env configuré -->
+<script type="module" src="/src/cloud.js"></script>
+</body>
+</html>

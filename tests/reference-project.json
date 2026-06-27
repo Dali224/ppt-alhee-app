@@ -1,0 +1,125 @@
+{
+  "meta": {
+    "copro": "Résidence Test ALHEE",
+    "typologie": "R+5 / 42 lots",
+    "syndic": "Cabinet Demo",
+    "adresseSyndic": "1 rue de la Référence, 75001 Paris",
+    "destinataire": "M. Dupont",
+    "fonction": "Président du Conseil Syndical",
+    "dateVisite": "15/03/2026",
+    "affaire": "ALH-REF-2026-001",
+    "auditeur": "J. Test",
+    "relecture": "M. Référence"
+  },
+  "lots": [
+    {
+      "num": "3.4",
+      "label": "Clos et couvert",
+      "subs": [
+        {
+          "name": "Toiture-terrasse",
+          "remark": "Étanchéité de 1998, en limite de vie.",
+          "items": [
+            { "desig": "Fissures sur relevés", "constat": "Plusieurs fissures observées sur les relevés bas, infiltrations potentielles.", "preco": "Réfection complète de l'étanchéité.", "etat": "urgent", "photoBytes": null },
+            { "desig": "Acrotère dégradé", "constat": "Mortier de couronnement éclaté en plusieurs points.", "preco": "Reprise des couronnements.", "etat": "moyen", "photoBytes": null }
+          ]
+        }
+      ]
+    },
+    {
+      "num": "3.5",
+      "label": "Fluides et réseaux",
+      "subs": [
+        {
+          "name": "Chaufferie collective",
+          "remark": "Chaudière gaz collective, 25 ans.",
+          "items": [
+            { "desig": "Chaudière en fin de vie", "constat": "Rendement < 75 %, pièces obsolètes.", "preco": "Remplacement par PAC collective hybride.", "etat": "urgent", "photoBytes": null }
+          ]
+        }
+      ]
+    }
+  ],
+  "oblig": {
+    "reglementaires": [
+      { "label": "DTG", "dispo": "Non", "comment": "À réaliser" },
+      { "label": "Audit énergétique ou DPE", "dispo": "Oui", "comment": "DPE D, 2024" }
+    ],
+    "contrats": [
+      { "label": "Entretien chaufferie", "dispo": "Oui", "comment": "Contrat P2" },
+      { "label": "Entretien VMC", "dispo": "Non", "comment": "À mettre en place" }
+    ]
+  },
+  "docs": {
+    "admin": [
+      { "label": "Règlement de copropriété", "dispo": "Oui" },
+      { "label": "Procès-verbal d'AG", "dispo": "Oui" }
+    ],
+    "plans": [
+      { "label": "Plan des façades", "dispo": "Non" },
+      { "label": "Plan des niveaux", "dispo": "Oui" }
+    ]
+  },
+  "chiffrage": {
+    "P0": [
+      { "travaux": "Audit énergétique réglementaire", "loc": "—", "ht": 4500, "ttc": 4950 }
+    ],
+    "P1": [
+      { "travaux": "Réfection étanchéité toiture-terrasse", "loc": "Toiture", "ht": 85000, "ttc": 93500 },
+      { "travaux": "Remplacement chaudière par PAC hybride", "loc": "Chaufferie", "ht": 120000, "ttc": 132000 }
+    ],
+    "P2": [
+      { "travaux": "Reprise des couronnements d'acrotère", "loc": "Toiture", "ht": 12000, "ttc": 13200 }
+    ],
+    "P3": []
+  },
+  "tva": 10,
+  "preco": [
+    {
+      "label": "3.4 Clos et couvert",
+      "rows": [
+        { "travaux": "Réfection étanchéité", "loc": "Toiture-terrasse", "prio": "P1" },
+        { "travaux": "Reprise couronnements", "loc": "Acrotère", "prio": "P2" }
+      ]
+    },
+    {
+      "label": "3.5 Fluides et réseaux",
+      "rows": [
+        { "travaux": "Remplacement PAC", "loc": "Chaufferie", "prio": "P1" }
+      ]
+    }
+  ],
+  "plan": [
+    {
+      "label": "3.4 Clos et couvert",
+      "rows": [
+        { "travaux": "Réfection étanchéité toiture-terrasse", "loc": "Toiture", "years": [1] },
+        { "travaux": "Reprise couronnements", "loc": "Acrotère", "years": [3] }
+      ]
+    },
+    {
+      "label": "3.5 Fluides et réseaux",
+      "rows": [
+        { "travaux": "Remplacement chaudière → PAC hybride", "loc": "Chaufferie", "years": [1, 2] }
+      ]
+    }
+  ],
+  "planTotals": {
+    "years": {
+      "1": 178200,
+      "2": 60000,
+      "3": 13200,
+      "4": 0, "5": 0, "6": 0, "7": 0, "8": 0, "9": 0, "10": 0
+    },
+    "grand": 251400
+  },
+  "synthese": "État général **acceptable** sur la majeure partie du clos et couvert, mais deux points **urgents** : l'étanchéité de toiture-terrasse en fin de vie et la chaudière collective obsolète.\n\nLes interventions prioritaires (P1) doivent être engagées dans l'année 1 pour limiter le risque d'infiltration et de défaillance énergétique.",
+  "conclusion": "Le présent PPT identifie environ **251 400 € TTC** de travaux à programmer sur 10 ans.\n\nLes scénarios **P0–P1** concentrent l'essentiel du budget (≈ 90 %) et conditionnent la pérennité du bâti et la performance énergétique.\n\nUne demande d'aides MaPrimeRénov' Copro est recommandée en parallèle du vote AG.",
+  "synthGen": {
+    "note": "État global : enveloppe à surveiller, équipements thermiques à renouveler.",
+    "etats": {
+      "toitureterrasse": "urgent",
+      "chaufferiecollective": "urgent"
+    }
+  }
+}

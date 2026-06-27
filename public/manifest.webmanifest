@@ -1,0 +1,20 @@
+{
+  "name": "ALHEE — Saisie PPT (Plan Pluriannuel de Travaux)",
+  "short_name": "PPT ALHEE",
+  "description": "Saisie de Plans Pluriannuels de Travaux en copropriété — outil ALHEE. Visite, état des lieux, photos, génération PowerPoint.",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#eaeeea",
+  "theme_color": "#18483C",
+  "categories": ["business", "productivity", "utilities"],
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

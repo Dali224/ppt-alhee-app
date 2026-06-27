@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="ALHEE PPT">
+  <rect width="512" height="512" rx="96" fill="#18483C"/>
+  <rect x="112" y="133" width="288" height="246" rx="16" fill="#ffffff"/>
+  <path d="M112 149a16 16 0 0 1 16-16h256a16 16 0 0 1 16 16v45H112z" fill="#E67E22"/>
+  <rect x="148" y="240" width="216" height="15" rx="7" fill="#cdd8cf"/>
+  <rect x="148" y="282" width="174" height="15" rx="7" fill="#cdd8cf"/>
+  <rect x="148" y="324" width="123" height="15" rx="7" fill="#E67E22"/>
+</svg>

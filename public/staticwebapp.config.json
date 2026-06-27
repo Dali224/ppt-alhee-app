@@ -1,0 +1,20 @@
+{
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": [
+      "/assets/*",
+      "/vendor/*",
+      "/*.{js,css,json,webmanifest,ico,txt}",
+      "/*.{png,jpg,jpeg,gif,svg,webp}",
+      "/*.{pptx,woff,woff2}"
+    ]
+  },
+  "mimeTypes": {
+    ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    ".webmanifest": "application/manifest+json",
+    ".json": "application/json"
+  },
+  "globalHeaders": {
+    "cache-control": "no-cache"
+  }
+}

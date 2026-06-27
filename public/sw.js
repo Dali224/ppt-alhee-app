@@ -10,7 +10,7 @@
    NB : pas de synchronisation réseau ici — les données restent en IndexedDB local
    (comme aujourd'hui). La synchro SharePoint viendra avec la Phase 4. */
 
-const CACHE = 'alhee-ppt-v3';
+const CACHE = 'alhee-ppt-v4';
 const APP_SHELL = [
   '/',
   '/index.html',

@@ -71,7 +71,8 @@ h1,h2,h3,.serif{font-family:var(--font-head);letter-spacing:-.01em}
   position:sticky;top:0;z-index:50;
   display:flex;align-items:center;gap:var(--s-2);flex-wrap:wrap;
   background:var(--vf);color:#fff;
-  padding:var(--s-3) var(--s-4);
+  /* + zone de sécurité haute (notch/barre d'état iPhone) : le contenu descend sous l'heure/wifi/batterie */
+  padding:calc(var(--s-3) + env(safe-area-inset-top,0px)) var(--s-4) var(--s-3);
   box-shadow:0 1px 0 rgba(255,255,255,.06) inset, 0 3px 12px rgba(7,26,17,.22);
 }
 #bar .logo{
@@ -409,7 +410,7 @@ input[type=file]{display:none}
     overflow-x:auto;
     -webkit-overflow-scrolling:touch;
     gap:6px;
-    padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));
+    padding:calc(8px + env(safe-area-inset-top,0px)) 10px calc(8px + env(safe-area-inset-bottom,0px));
     align-items:center;
   }
   #bar::-webkit-scrollbar{height:0}                  /* défilement discret */

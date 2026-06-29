@@ -268,7 +268,9 @@ const outHtml = path.join(ROOT, 'index.html');
 // L'extraction ne les écrase PLUS s'ils existent, sauf --force / FORCE=1.
 // Les assets dérivés (pptx, jszip, engine, catalog) sont toujours régénérés.
 const FORCE = process.argv.includes('--force') || process.env.FORCE === '1';
-const LIVING = new Set([outApp, outCss, outHtml]);
+// catalog.js est désormais « vivant » lui aussi : les prix du catalogue y sont maintenus à la
+// main (mise à jour via Excel), il ne doit donc plus être écrasé par une ré-extraction du HTML.
+const LIVING = new Set([outApp, outCss, outHtml, outCatalog]);
 
 for (const p of [outPptx, outJszip, outEngine, outCatalog, outApp, outCss, outHtml]) {
   fs.mkdirSync(path.dirname(p), { recursive: true });

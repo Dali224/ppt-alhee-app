@@ -10,7 +10,9 @@
    NB : pas de synchronisation réseau ici — les données restent en IndexedDB local
    (comme aujourd'hui). La synchro SharePoint viendra avec la Phase 4. */
 
-const CACHE = 'alhee-ppt-v4';
+// __BUILD_ID__ est remplacé par l'identifiant du commit lors du déploiement (voir le workflow),
+// pour que le service worker change d'empreinte à chaque mise à jour → détection + auto-reload.
+const CACHE = 'alhee-ppt-__BUILD_ID__';
 const APP_SHELL = [
   '/',
   '/index.html',

@@ -33,6 +33,11 @@ jobs:
           VITE_SP_INDEX_LIST: PPT-Index
           VITE_SP_DATA_LIBRARY: PPT-Data
 
+      # Empreinte unique du service worker à chaque déploiement → l'app détecte la nouvelle
+      # version et se met à jour toute seule (voir public/sw.js et src/pwa.js).
+      - name: Versionner le service worker
+        run: sed -i "s/__BUILD_ID__/${GITHUB_SHA}/g" dist/sw.js
+
       - name: Déployer vers Azure Static Web Apps
         uses: Azure/static-web-apps-deploy@v1
         with:

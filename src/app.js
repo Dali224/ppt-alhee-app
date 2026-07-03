@@ -52,7 +52,7 @@ async function compressImageFile(file){
 function rid(){ return 'r'+Math.random().toString(36).slice(2,9); }
 let project = newProject();
 function newProject(){
-  const p={meta:{},car:{},lots:{},zone:'paris',tva:10,synthese:'',conclusion:'',synthGen:{note:'',etats:{}}};
+  const p={meta:{},car:{},lots:{},zone:'paris',tva:10,synthese:'',conclusion:'',synthGen:{note:'',etats:{}},p0:[]};
   p.oblig=JSON.parse(JSON.stringify(DEFAULT_OBLIG)); p.docs=JSON.parse(JSON.stringify(DEFAULT_DOCS));
   BDD.lots.forEach(L=>{ p.lots[L.num]={subs:{}}; L.subs.forEach(s=>{ p.lots[L.num].subs[s.name]={remark:'',items:[]}; }); });
   return p;
@@ -110,6 +110,7 @@ const TABS=[
 ];
 TABS.push({id:'synthg',label:'Synthèse générale'});
 BDD.lots.forEach(L=> TABS.push({id:'lot:'+L.num,label:L.num+' '+shortLabel(L.label)}));
+TABS.push({id:'p0',label:'Énergie & confort d\'été'});
 TABS.push({id:'synth',label:'Synthèse'});
 TABS.push({id:'chif',label:'Chiffrage'});
 TABS.push({id:'plan',label:'Plan 10 ans'});
@@ -135,6 +136,7 @@ function renderMain(){
   if(activeTab.startsWith('lot:')) return renderLot(m, activeTab.slice(4));
   if(activeTab==='obl') return renderObl(m);
   if(activeTab==='doc') return renderDoc(m);
+  if(activeTab==='p0') return renderP0(m);
   if(activeTab==='chif') return renderChif(m);
   if(activeTab==='plan') return renderPlan(m);
   if(activeTab==='synthg') return renderSynG(m);
@@ -288,7 +290,17 @@ function renderPlan(m){
       html+='</tr>'; });
     html+='</tbody></table></div></div></div>';
   });
-  if(!any) html+='<div class="soon-box"><p>Aucun poste de travaux saisi. Renseigne des postes dans les onglets des lots techniques (3.2 à 3.7).</p></div>';
+  const _p0plan=p0Works();
+  if(_p0plan.length){ any=true;
+    html+='<div class="subcard open"><div class="sh">'+escAttr(P0_LABEL)+' <span class="badge">'+_p0plan.length+' poste(s)</span><span class="chev"> </span></div><div class="sb"><div class="plan-wrap"><table class="plan-tbl"><thead><tr><th class="pt-trav">Travaux P0</th><th class="pt-loc">Localisation</th>';
+    for(let y=1;y<=10;y++) html+='<th>'+y+'</th>'; html+='</tr></thead><tbody>';
+    _p0plan.forEach(w=>{ const yy=Number(w.annee)||1; const trav=(w.desig||'').trim();
+      html+='<tr><td class="pt-trav" title="'+escAttr(trav)+'">'+escAttr(trav.length>90?trav.slice(0,90)+'…':trav)+'</td><td>'+escAttr(w.loc||'')+'</td>';
+      for(let y=1;y<=10;y++) html+='<td>'+(y===yy?'✓':'')+'</td>';
+      html+='</tr>'; });
+    html+='</tbody></table></div><p class="hint" style="margin-top:8px">Ces postes se saisissent et se modifient dans l\'onglet « Énergie &amp; confort d\'été ».</p></div></div>';
+  }
+  if(!any) html+='<div class="soon-box"><p>Aucun poste de travaux saisi. Renseigne des postes dans les onglets des lots techniques (3.2 à 3.7) ou dans « Énergie & confort d\'été ».</p></div>';
   html+='<div class="subcard open"><div class="sh">Totaux par année<span class="chev"> </span></div><div class="sb"><div id="planTotals"></div></div></div>';
   m.innerHTML=html;
   m.querySelectorAll('.plan-tbl input[type=checkbox]').forEach(cb=>{ const it=flat[+cb.dataset.pi], y=+cb.dataset.y;
@@ -343,18 +355,27 @@ function renderDoc(m){
 function effPrio(it){ if(it.prio) return it.prio; const c=(it.cat||''); if(c.indexOf('nerg')>=0) return 'P0'; if(it.etat==='urgent') return 'P1'; if(it.etat==='moyen') return 'P2'; return 'P3'; }
 function effAnnee(it){ if(it.annee) return Number(it.annee); const p=effPrio(it); return p==='P1'?1:p==='P2'?3:p==='P3'?6:2; }
 function iterItems(cb){ Object.entries(project.lots||{}).forEach(([num,L])=>{ Object.values(L.subs||{}).forEach(sub=>{ (sub.items||[]).forEach(it=>cb(it,num)); }); }); }
+const P0_LABEL='Performance énergétique & confort d\'été';
+function p0Works(){ return (project.p0||[]).filter(w=>(w.desig||'').trim()); }
 function computePreco(){ const byLot={};
   iterItems((it,num)=>{ const trav=(it.preco||it.constat||'').trim(); if(!trav) return; (byLot[num]=byLot[num]||[]).push({travaux:trav, loc:it.loc||'', prio:effPrio(it)}); });
-  return BDD.lots.filter(L=>byLot[L.num]).map(L=>({label:L.num+' '+shortLabel(L.label), rows:byLot[L.num]})); }
+  const groups=BDD.lots.filter(L=>byLot[L.num]).map(L=>({label:L.num+' '+shortLabel(L.label), rows:byLot[L.num]}));
+  const p0=p0Works().map(w=>({travaux:w.desig.trim(), loc:w.loc||'', prio:'P0'}));
+  if(p0.length) groups.push({label:P0_LABEL, rows:p0});
+  return groups; }
 function computePlan(){ const tva=Number(project.tva||10)/100; const byLot={}; const years={};
   iterItems((it,num)=>{ const trav=(it.preco||it.constat||'').trim(); if(!trav) return; const ys=effYears(it); const ttc=Math.round(Number(it.total||0)*(1+tva));
     (byLot[num]=byLot[num]||[]).push({travaux:trav, loc:it.loc||'', years:ys, ttc}); ys.forEach(y=>{ years[y]=(years[y]||0)+ttc; }); });
+  const plan=BDD.lots.filter(L=>byLot[L.num]).map(L=>({label:L.num+' '+shortLabel(L.label), rows:byLot[L.num]}));
+  const p0rows=p0Works().map(w=>{ const y=Number(w.annee)||1; const ttc=Math.round(Number(w.total||0)*(1+tva)); years[y]=(years[y]||0)+ttc; return {travaux:w.desig.trim(), loc:w.loc||'', years:[y], ttc}; });
+  if(p0rows.length) plan.push({label:P0_LABEL, rows:p0rows});
   const grand=Object.values(years).reduce((a,b)=>a+b,0);
-  return { plan: BDD.lots.filter(L=>byLot[L.num]).map(L=>({label:L.num+' '+shortLabel(L.label), rows:byLot[L.num]})), totals:{years, grand} }; }
+  return { plan, totals:{years, grand} }; }
 function computeChiffrage(){
   const tva=Number(project.tva||10)/100; const g={P0:[],P1:[],P2:[],P3:[]};
   iterItems(it=>{ const trav=(it.preco||it.constat||'').trim(); if(!trav) return;
     const ht=Number(it.total||0); g[effPrio(it)].push({travaux:trav, loc:it.loc||'', ht, ttc:Math.round(ht*(1+tva))}); });
+  p0Works().forEach(w=>{ const ht=Number(w.total||0); g.P0.push({travaux:w.desig.trim(), loc:w.loc||'', ht, ttc:Math.round(ht*(1+tva))}); });
   return g;
 }
 function renderChif(m){
@@ -377,6 +398,59 @@ function renderChif(m){
   m.innerHTML=html;
   const tv=document.getElementById('tvaIn'); if(tv) tv.onchange=()=>{ project.tva=Number(tv.value)||10; renderMain(); };
   bindAccordions(m);
+}
+
+/* --- Onglet P0 : performance énergétique & confort d'été (travaux proactifs) --- */
+function renderP0(m){
+  if(!Array.isArray(project.p0)) project.p0=[];
+  m.innerHTML='';
+  const h=document.createElement('div'); h.className='lot-h'; h.textContent='Performance énergétique & confort d\'été'; m.appendChild(h);
+  const hint=document.createElement('div'); hint.className='hint';
+  hint.innerHTML='Listez ici les <b>travaux P0</b> (performance énergétique, confort d\'été) — des préconisations <b>proactives</b>, indépendantes des anomalies constatées. Ils alimentent automatiquement le <b>chiffrage (programme P0)</b>, le <b>plan pluriannuel</b> et les <b>préconisations</b> du PowerPoint.';
+  m.appendChild(hint);
+  const card=document.createElement('div'); card.className='subcard open';
+  const sh=document.createElement('div'); sh.className='sh'; sh.innerHTML='Travaux P0 à prévoir <span class="badge">'+project.p0.length+' poste(s)</span><span class="chev"> </span>';
+  const body=document.createElement('div'); body.className='sb';
+  project.p0.forEach((w,idx)=> body.appendChild(buildP0Row(w,idx)));
+  const add=document.createElement('button'); add.className='addbtn'; add.textContent='+ Ajouter un travail P0';
+  add.onclick=()=>{ project.p0.push({desig:'',loc:'',pu:'',unite:'',qty:'',total:0,annee:''}); if(typeof _scheduleAutosave==='function') _scheduleAutosave(); renderMain(); };
+  body.appendChild(add);
+  card.appendChild(sh); card.appendChild(body); m.appendChild(card);
+  const tva=Number(project.tva||10)/100;
+  const totHT=project.p0.reduce((s,w)=>s+Number(w.total||0),0);
+  const recap=document.createElement('div'); recap.className='totline'; recap.style.cssText='font-size:15px;margin-top:14px';
+  recap.innerHTML='<b>Total P0 : '+fmtEur(totHT)+' HT · '+fmtEur(Math.round(totHT*(1+tva)))+' TTC</b>';
+  m.appendChild(recap);
+  bindAccordions(m);
+}
+function buildP0Row(w,idx){
+  const a=document.createElement('div'); a.className='anom';
+  const del=document.createElement('button'); del.className='del'; del.textContent='✕';
+  del.onclick=()=>{ project.p0.splice(idx,1); if(typeof _scheduleAutosave==='function') _scheduleAutosave(); renderMain(); }; a.appendChild(del);
+  const fD=document.createElement('div'); fD.className='field'; fD.innerHTML='<label>Travaux / préconisation</label>';
+  const taD=document.createElement('textarea'); taD.value=w.desig||''; taD.placeholder='ex : Isolation des combles perdus par soufflage'; taD.oninput=()=>w.desig=taD.value; fD.appendChild(taD); a.appendChild(fD);
+  const fr=document.createElement('div'); fr.className='inline3';
+  const puF=document.createElement('div'); puF.className='field'; puF.innerHTML='<label>P.U. € HT</label>';
+  const inPU=document.createElement('input'); inPU.type='number'; inPU.value=(w.pu!=null?w.pu:''); inPU.oninput=()=>{ w.pu=inPU.value; rec(); }; puF.appendChild(inPU);
+  const uF=document.createElement('div'); uF.className='field'; uF.innerHTML='<label>Unité</label>';
+  const uEl=document.createElement('input'); uEl.value=w.unite||''; uEl.placeholder='U / m² / ml'; uEl.oninput=()=>w.unite=uEl.value; uF.appendChild(uEl);
+  const qF=document.createElement('div'); qF.className='field'; qF.innerHTML='<label>Quantité</label>';
+  const inQ=document.createElement('input'); inQ.type='number'; inQ.value=w.qty||''; inQ.placeholder='ex: 1'; inQ.oninput=()=>{ w.qty=inQ.value; rec(); }; qF.appendChild(inQ);
+  fr.appendChild(puF); fr.appendChild(uF); fr.appendChild(qF); a.appendChild(fr);
+  const totF=document.createElement('div'); totF.className='totline';
+  function rec(){ const pu=Number(w.pu||0), q=Number(w.qty||0), t=pu*q; w.total=t;
+    totF.innerHTML='Total estimé : <b>'+(t?fmtEur(t):'—')+'</b>'+((pu&&w.unite)?' <span class="sub">('+fmtEur(pu)+' / '+escAttr(w.unite)+' × '+(w.qty||0)+')</span>':''); }
+  rec(); a.appendChild(totF);
+  const fr2=document.createElement('div'); fr2.className='inline2';
+  const locF=document.createElement('div'); locF.className='field'; locF.innerHTML='<label>Localisation</label>';
+  const inLoc=document.createElement('input'); inLoc.value=w.loc||''; inLoc.placeholder='ex: Toiture, façades…'; inLoc.oninput=()=>w.loc=inLoc.value; locF.appendChild(inLoc);
+  const anF=document.createElement('div'); anF.className='field'; anF.innerHTML='<label>Année (plan)</label>';
+  const selAnnee=document.createElement('select');
+  { const op=document.createElement('option'); op.value=''; op.textContent='Année 1 (défaut)'; selAnnee.appendChild(op); }
+  for(let y=1;y<=10;y++){ const op=document.createElement('option'); op.value=String(y); op.textContent='Année '+y; selAnnee.appendChild(op); }
+  selAnnee.value=w.annee||''; selAnnee.onchange=()=>w.annee=selAnnee.value; anF.appendChild(selAnnee);
+  fr2.appendChild(locF); fr2.appendChild(anF); a.appendChild(fr2);
+  return a;
 }
 
 function renderGen(m){
@@ -578,6 +652,7 @@ function mergeProject(loaded){ const base=newProject();
   base.synthese=loaded.synthese||''; base.conclusion=loaded.conclusion||'';
   if(loaded.oblig) base.oblig=loaded.oblig; if(loaded.docs) base.docs=loaded.docs;
   if(loaded.synthGen) base.synthGen=loaded.synthGen;
+  if(Array.isArray(loaded.p0)) base.p0=loaded.p0;
   if(loaded.lots) for(const k in loaded.lots) if(base.lots[k]){ for(const s in loaded.lots[k].subs||{}) if(base.lots[k].subs[s]) base.lots[k].subs[s]=loaded.lots[k].subs[s]; }
   return base; }
 

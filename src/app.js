@@ -537,27 +537,56 @@ function anomCard(L,sub,st,it,card){
   const inA=document.createElement('input'); inA.placeholder='Observation libre'; inA.style.marginTop='6px'; inA.style.display='none';
   inA.oninput=()=>{ it.anom=inA.value; }; fA.appendChild(inA);
   top.appendChild(fA);
+  // liste déroulante « entretien / travaux » (affichée quand une anomalie en propose plusieurs)
+  const selW=document.createElement('select'); selW.style.display='none'; selW.style.marginBottom='6px';
+  let curEntries=[];
   a.appendChild(top);
 
+  // Groupe les entrées d'une désignation par ANOMALIE (même `l`) : chaque anomalie une seule fois,
+  // en regroupant ses différents entretiens/travaux possibles (`r`).
+  function anomGroups(){
+    const arr=(sub.designations||{})[selD.value]||[]; const groups=[]; const idx={};
+    arr.forEach(x=>{ const k=x.l||''; if(idx[k]==null){ idx[k]=groups.length; groups.push({l:x.l, c:x.c, entries:[]}); } groups[idx[k]].entries.push(x); });
+    return groups;
+  }
   function fillAnomOptions(){
-    const arr=(sub.designations||{})[selD.value]||[];
-    selA.innerHTML='<option value="">— choisir —</option>'+arr.map((x,i)=>'<option value="'+i+'">'+escAttr(x.l)+'</option>').join('')+'<option value="__autre">Autre…</option>';
+    const g=anomGroups();
+    selA.innerHTML='<option value="">— choisir —</option>'+g.map((grp,i)=>'<option value="'+i+'">'+escAttr(grp.l)+'</option>').join('')+'<option value="__autre">Autre…</option>';
+  }
+  function applyEntry(x){
+    taW.value=x.r||''; it.preco=x.r||'';
+    it.cat=x.cat||''; it.unite=x.u||''; it.pP=(x.pP==null?null:x.pP); it.pV=(x.pV==null?null:x.pV); it.pu='';
+    catBadge.textContent=it.cat||'—'; catBadge.className='catbadge '+catClass(it.cat);
+    unitEl.value=it.unite||''; inPU.value=''; inPU.placeholder=(defaultPU()===''?'—':defaultPU()+''); recompute();
+  }
+  function clearPreco(){
+    it.preco=''; taW.value=''; it.cat=''; catBadge.textContent='—'; catBadge.className='catbadge';
+    it.unite=''; unitEl.value=''; it.pP=null; it.pV=null; it.pu=''; inPU.value=''; inPU.placeholder='—'; recompute();
+  }
+  // Prépare le choix de l'entretien/travaux : 1 seul → appliqué direct ; plusieurs → liste déroulante.
+  function setupPreco(grp, keep){
+    curEntries=grp.entries;
+    if(grp.entries.length<=1){ selW.style.display='none'; if(grp.entries.length===1 && !keep) applyEntry(grp.entries[0]); return; }
+    const cur=grp.entries.findIndex(e=>(e.r||'')===(it.preco||''));
+    selW.innerHTML='<option value="">— choisir l\'entretien / travaux —</option>'+grp.entries.map((e,j)=>'<option value="'+j+'">'+escAttr(e.r)+'</option>').join('');
+    selW.value = cur>=0? String(cur):''; selW.style.display='block';
+    if(!keep && cur<0) clearPreco();
   }
   selD.onchange=()=>{ it.desig=selD.value; inD.style.display=selD.value==='__autre'?'block':'none';
-    if(selD.value==='__autre'){ selA.innerHTML='<option value="">(saisie libre)</option>'; inA.style.display='block'; }
-    else { fillAnomOptions(); inA.style.display='none'; } };
+    if(selD.value==='__autre'){ selA.innerHTML='<option value="">(saisie libre)</option>'; inA.style.display='block'; selW.style.display='none'; }
+    else { fillAnomOptions(); selA.value=''; inA.style.display='none'; selW.style.display='none'; } };
   selA.onchange=()=>{
-    if(selA.value==='__autre'){ inA.style.display='block'; it.anom=''; return; }
+    if(selA.value==='__autre'){ inA.style.display='block'; it.anom=''; selW.style.display='none'; return; }
     inA.style.display='none';
-    const arr=(sub.designations||{})[selD.value]||[]; const x=arr[+selA.value];
-    if(x){ it.anom=x.l; taC.value=x.c; it.constat=x.c;
-      taW.value=x.r||''; it.preco=x.r||'';
-      it.cat=x.cat||''; it.unite=x.u||''; it.pP=(x.pP==null?null:x.pP); it.pV=(x.pV==null?null:x.pV); it.pu='';
-      catBadge.textContent=it.cat||'—'; catBadge.className='catbadge '+catClass(it.cat);
-      unitEl.value=it.unite||''; inPU.value=''; inPU.placeholder=(defaultPU()===''?'—':defaultPU()+''); recompute();
-    }
+    const grp=anomGroups()[+selA.value];
+    if(grp){ it.anom=grp.l; taC.value=grp.c; it.constat=grp.c; setupPreco(grp, false); }
   };
-  if(it.desig && it.desig!=='__autre'){ fillAnomOptions(); }
+  selW.onchange=()=>{ const x=curEntries[+selW.value]; if(x) applyEntry(x); };
+  if(it.desig && it.desig!=='__autre'){
+    fillAnomOptions();
+    const g=anomGroups(); const gi=g.findIndex(grp=>(grp.l||'')===(it.anom||''));
+    if(gi>=0){ selA.value=String(gi); setupPreco(g[gi], true); }
+  }
   else if(it.desig==='__autre'){ selA.innerHTML='<option value="">(saisie libre)</option>'; inA.style.display='block'; inA.value=it.anom||''; }
 
   // --- constat ---
@@ -587,6 +616,7 @@ function anomCard(L,sub,st,it,card){
   const right=document.createElement('div');
   // recommandation
   const fW=document.createElement('div'); fW.className='field'; fW.innerHTML='<label>Entretien / travaux à prévoir (recommandation)</label>';
+  fW.appendChild(selW);
   const taW=document.createElement('textarea'); taW.value=it.preco||''; taW.oninput=()=>it.preco=taW.value; fW.appendChild(taW);
   right.appendChild(fW);
   // catégorie

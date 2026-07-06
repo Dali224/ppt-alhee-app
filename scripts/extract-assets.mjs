@@ -270,9 +270,7 @@ const outHtml = path.join(ROOT, 'index.html');
 const FORCE = process.argv.includes('--force') || process.env.FORCE === '1';
 // catalog.js est désormais « vivant » lui aussi : les prix du catalogue y sont maintenus à la
 // main (mise à jour via Excel), il ne doit donc plus être écrasé par une ré-extraction du HTML.
-// modele-alhee.pptx est également « vivant » : trame enrichie à la main (7 slides 1.6/1.7 + analyse
-// énergétique, rattachées au master unique, couleurs figées, ×1.5), ne plus l'écraser par TEMPLATE_B64.
-const LIVING = new Set([outApp, outCss, outHtml, outCatalog, outPptx]);
+const LIVING = new Set([outApp, outCss, outHtml, outCatalog]);
 
 for (const p of [outPptx, outJszip, outEngine, outCatalog, outApp, outCss, outHtml]) {
   fs.mkdirSync(path.dirname(p), { recursive: true });
